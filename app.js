@@ -12,20 +12,9 @@ mongoose.connect( uri , {useNewUrlParser:true , useUnifiedTopology:true} , ()=>{
     console.log("Database successfully connected...")
 })
 
-const userInput = {
-    username: "ahasjdkl",
-    password: "asldkajsld",
-    role: "admin"
-}
-
-const user = new User(userInput)
-user.save((err,document)=>{
-    if(err){
-        console.log(err)
-    }else{
-        console.log(document)
-    }
-})
+// creating modular routes using express.Router()
+const userRouter = require('./routes/User')
+app.use('/user',userRouter)
 
 const port = process.env.PORT
 app.listen(port, ()=>{

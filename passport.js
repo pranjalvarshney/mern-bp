@@ -1,7 +1,7 @@
 const passport = require('passport')
 const LocalStrategy = require('passport-local').Strategy
 const User = require('./models/user')
-const JWTStrategy = require('passport-jwt')
+const JwtStrategy = require('passport-jwt').Strategy
 const user = require('./models/user')
 
 const cookieExtractor = req => {
@@ -14,7 +14,7 @@ const cookieExtractor = req => {
 
 // authorization used for protecting routes
 
-passport.use(new JWTStrategy({
+passport.use(new JwtStrategy({
    jwtFromRequest: cookieExtractor,
    secretOrKey: "this is a sample key"  
 },(payload,done)=>{
@@ -43,8 +43,6 @@ passport.use(new LocalStrategy((username,password,done)=>{
             return done(null,false)
         }
         // check if password is correct
-        user.comparePassword(password,done){
-
-        }
+        user.comparePassword(password,done)
     })
 }))
