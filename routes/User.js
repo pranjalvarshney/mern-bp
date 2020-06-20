@@ -5,6 +5,15 @@ const passportConfig = require('../passport')  // using the passport configurati
 const User = require('../models/user')
 const Todo = require('../models/todo')
 const JWT = require('jsonwebtoken')
+const { session } = require('passport')
+const user = require('../models/user')
+
+const signToken = userID => {
+    return JWT.sign({
+        iss: "developer",
+        sub: userID
+    },process.env.secretOrKey,{expiresIn: "1h"})
+}
 
 userRouter.post('/signup',(req,res)=>{
     const {username,password,role} = req.body
@@ -41,6 +50,45 @@ userRouter.post('/signup',(req,res)=>{
                 }
             })
 
+        }
+    })
+})
+
+userRouter.post('/signin',passport.authenticate('local',{session:false}),(req,res)=>{
+    if(req.isAuthenticated()){
+        const {_id, username,role} = req.user 
+        const token = signToken(_id)
+        res.cookie('access_token',token,{httpOnly:true,sameSite:true}) // httponly - preventing XSS //samesite - preventing CSRF attacks (protecting the jwt token) 
+        res.status(200).json({isAuthenticated:true, user: {username,role}})
+    }
+})
+
+userRouter.get('/logout',passport.authenticate('jwt',{session:false}),(req,res)=>{
+    res.clearCookie('access_token')
+    res.json({user:{
+        username: '',
+        role: '',
+    },
+    success:true
+    })
+})
+
+userRouter.post('/todo',passport.authenticate('jwt',{session:false}),(req,res)=>{
+    const todo = new Todo({
+        name: req.body.name
+    })
+    todo.save(err => {
+        if(err){
+            res.status(500).json({message: {msgBody:'Error has occured', msgError: true}})
+        }else{
+            req.user.todos.push(todo)
+            req.user.save(err=> {
+                if(err){
+                    res.status(500).json({message: {msgBody:'Error has occured', msgError: true}})
+                }else{
+                    res.status(200).json({message: {msgBody: "Successfully created", msgError:false}})
+                }
+            })
         }
     })
 })
